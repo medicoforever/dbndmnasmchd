@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Viewer - eAnatomy Web</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/viewer.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#black">
+</head>
+<body class="viewer-body">
+    <div class="viewer-header">
+        <a href="index.html" class="back-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </a>
+        <div class="viewer-title">
+            <h2 id="moduleTitle">Loading...</h2>
+            <div id="seriesTitle" class="viewer-subtitle"></div>
+        </div>
+        <div class="viewer-controls">
+            <button id="toggleLabelsBtn" class="control-btn active" title="Toggle Labels">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+            </button>
+            <div class="dropdown-container">
+                <button id="seriesSelectBtn" class="control-btn" title="Select Series">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                </button>
+                <div id="seriesDropdown" class="dropdown-menu hidden">
+                    <!-- Added dynamically -->
+                </div>
+            </div>
+            <div class="dropdown-container" id="contrastContainer" style="display:none;">
+                <button id="contrastSelectBtn" class="control-btn" title="Select Contrast">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.36 5.36 0 0 1-4.4 1.36 5.36 5.36 0 0 1-4.4-4.4 5.36 5.36 0 0 1-1.36-4.4A9 9 0 0 0 12 3z"/></svg>
+                </button>
+                <div id="contrastDropdown" class="dropdown-menu hidden">
+                    <!-- Added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="viewer-workspace" id="viewerWorkspace">
+        <div class="image-layer" id="imageLayer">
+            <img id="mainImage" class="main-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" alt="Slice Image">
+            <div id="pointsLayer" class="points-layer">
+                <!-- Data injection point -->
+            </div>
+            <canvas id="linesCanvas" class="lines-canvas"></canvas>
+            <div id="labelsLayer" class="labels-layer">
+                <!-- Vectorized HTML absolute labels -->
+            </div>
+        </div>
+    </div>
+
+    <div class="viewer-footer">
+        <div class="scrubber-container">
+            <span id="sliceCurrent" class="slice-count">0</span>
+            <input type="range" id="sliceSlider" class="slice-slider" min="1" max="100" value="1">
+            <span id="sliceTotal" class="slice-count">100</span>
+        </div>
+    </div>
+
+    <!-- Hidden image for preloading adjacent slices for speed -->
+    <img id="preloadImgPlus1" style="display:none">
+    <img id="preloadImgMinus1" style="display:none">
+
+    <script src="js/viewer.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('SW registered!', reg);
+                }).catch(err => console.log('SW registration missing', err));
+            });
+        }
+    </script>
+</body>
+</html>

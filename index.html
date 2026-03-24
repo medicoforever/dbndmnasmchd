@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>eAnatomy Web - Premium Anatomy Atlas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#121212">
+    <meta name="description" content="Offline interactive medical anatomy atlas for the browser.">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>eAnatomy <span class="logo-accent">Web</span></h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="moduleSearch" placeholder="Search anatomical modules..." autocomplete="off">
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <aside class="sidebar">
+            <h3>Regions</h3>
+            <ul id="categoryList" class="category-list">
+                <!-- Categories injected here -->
+            </ul>
+        </aside>
+        
+        <section class="content">
+            <div class="module-grid" id="moduleGrid">
+                <!-- Module cards injected here -->
+                <div class="loading-state">Loading anatomy catalog...</div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('SW registered!', reg);
+                }).catch(err => console.log('SW registration missing', err));
+            });
+        }
+    </script>
+</body>
+</html>
