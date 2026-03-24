@@ -21,9 +21,20 @@
             <div id="seriesTitle" class="viewer-subtitle"></div>
         </div>
         <div class="viewer-controls">
+            <div class="search-container">
+                <input type="text" id="labelSearch" placeholder="Find structure..." autocomplete="off">
+            </div>
             <button id="toggleLabelsBtn" class="control-btn active" title="Toggle Labels">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
             </button>
+            <div class="dropdown-container">
+                <button id="filterSelectBtn" class="control-btn" title="Anatomical Systems">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                </button>
+                <div id="filterDropdown" class="dropdown-menu hidden">
+                    <!-- Added dynamically -->
+                </div>
+            </div>
             <div class="dropdown-container">
                 <button id="seriesSelectBtn" class="control-btn" title="Select Series">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>

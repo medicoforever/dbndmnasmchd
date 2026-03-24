@@ -12,13 +12,8 @@ let currentContrastIdx = 0;
 let currentSlice = 1;
 let totalSlices = 1;
 let isLabelsVisible = true;
-
-// Zoom / Pan State
-let transform = { x: 0, y: 0, scale: 1 };
-let isDragging = false;
-let startPan = { x: 0, y: 0 };
-let pinchStartDist = 0;
-let pinchStartScale = 1;
+let searchQuery = '';
+let hiddenFilters = new Set(); // IDs of filters to hide
 
 // DOM Elements
 const moduleTitle = document.getElementById('moduleTitle');
@@ -32,6 +27,9 @@ const sliceSlider = document.getElementById('sliceSlider');
 const sliceCurrent = document.getElementById('sliceCurrent');
 const sliceTotal = document.getElementById('sliceTotal');
 const toggleLabelsBtn = document.getElementById('toggleLabelsBtn');
+const labelSearch = document.getElementById('labelSearch');
+const filterSelectBtn = document.getElementById('filterSelectBtn');
+const filterDropdown = document.getElementById('filterDropdown');
 const seriesSelectBtn = document.getElementById('seriesSelectBtn');
 const seriesDropdown = document.getElementById('seriesDropdown');
 const contrastContainer = document.getElementById('contrastContainer');
@@ -167,72 +165,73 @@ function renderPoints(series, sliceIndex) {
     
     if (!isLabelsVisible) return;
     
-    // Match points mapping. We used stringified sort_order as keys.
     const pts = series.points ? series.points[sliceIndex.toString()] : null;
     if (!pts) return;
     
     const cWidth = series.width || 512;
     const cHeight = series.height || 512;
     
-    // Set canvas internal resolution to match image native resolution
     linesCanvas.width = cWidth;
     linesCanvas.height = cHeight;
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     
     pts.forEach((pt, i) => {
+        // FILTER CHECK
+        if (hiddenFilters.has(pt.filter_id)) return;
+
+        const txt = (pt.name && pt.name.en) ? pt.name.en : 'Structure';
+        
+        // SEARCH CHECK
+        const isMatch = searchQuery && txt.toLowerCase().includes(searchQuery);
+        if (searchQuery && !isMatch) return; // Hide non-matches if searching
+
         const px = (pt.x / cWidth) * 100;
         const py = (pt.y / cHeight) * 100;
         
-        // Create DOT
         const dot = document.createElement('div');
         dot.className = 'anatomy-point';
+        if (isMatch) dot.classList.add('search-match');
         dot.style.left = px + '%';
         dot.style.top = py + '%';
         dot.style.backgroundColor = pt.color || '#ffcc00';
         
-        // Text label
-        const txt = (pt.name && pt.name.en) ? pt.name.en : 'Structure';
-        
         const label = document.createElement('div');
         label.className = 'anatomy-label';
+        if (isMatch) label.classList.add('search-match');
         label.textContent = txt;
         label.style.top = py + '%';
         
-        // Simple positioning logic: right side if x > 50%, left side if x <= 50%
         let labelX;
         if (pt.x > cWidth / 2) {
-            label.style.left = '95%';
+            label.style.left = '98%';
             label.style.transform = 'translate(-100%, -50%)';
-            labelX = cWidth * 0.95;
+            labelX = cWidth * 0.98;
         } else {
-            label.style.left = '5%';
+            label.style.left = '2%';
             label.style.transform = 'translate(0%, -50%)';
-            labelX = cWidth * 0.05;
+            labelX = cWidth * 0.02;
         }
         
-        // Draw line on Canvas between DOT and LABEL
         ctx.beginPath();
         ctx.moveTo(pt.x, pt.y);
         ctx.lineTo(labelX, pt.y);
         ctx.stroke();
         
-        // Hover effects
         const highlight = () => {
             dot.classList.add('active');
             label.classList.add('active');
-            // Re-draw line brighter
             ctx.beginPath();
             ctx.moveTo(pt.x, pt.y);
             ctx.lineTo(labelX, pt.y);
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2;
             ctx.stroke();
         };
         const removeHighlight = () => {
             dot.classList.remove('active');
             label.classList.remove('active');
-            renderPoints(series, sliceIndex); // Lazy redraw
+            renderPoints(series, sliceIndex);
         };
         
         dot.onmouseenter = highlight;
@@ -261,11 +260,64 @@ toggleLabelsBtn.addEventListener('click', () => {
     }
 });
 
+labelSearch.addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase();
+    const ser = moduleData.series[currentSeriesIdx];
+    renderPoints(ser, currentSlice);
+});
+
+function setupFilterDropdown() {
+    filterDropdown.innerHTML = '';
+    if (!moduleData.filters) return;
+    
+    // Sort filters by system/name
+    const sortedFilters = Object.values(moduleData.filters).sort((a,b) => {
+        const nameA = a.name ? (a.name.en || '') : '';
+        const nameB = b.name ? (b.name.en || '') : '';
+        return nameA.localeCompare(nameB);
+    });
+
+    sortedFilters.forEach(f => {
+        const name = f.name ? (f.name.en || f.category) : f.category;
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !hiddenFilters.has(f.id);
+        checkbox.style.marginRight = '10px';
+        
+        item.appendChild(checkbox);
+        item.appendChild(document.createTextNode(name));
+        
+        item.onclick = (e) => {
+            e.stopPropagation();
+            checkbox.checked = !checkbox.checked;
+            if (checkbox.checked) hiddenFilters.delete(f.id);
+            else hiddenFilters.add(f.id);
+            
+            const ser = moduleData.series[currentSeriesIdx];
+            renderPoints(ser, currentSlice);
+        };
+        checkbox.onclick = (e) => {
+            e.stopPropagation();
+            if (checkbox.checked) hiddenFilters.delete(f.id);
+            else hiddenFilters.add(f.id);
+            const ser = moduleData.series[currentSeriesIdx];
+            renderPoints(ser, currentSlice);
+        };
+
+        filterDropdown.appendChild(item);
+    });
+}
+
 // Dropdowns
-seriesSelectBtn.addEventListener('click', (e) => {
+filterSelectBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    seriesDropdown.classList.toggle('hidden');
+    filterDropdown.classList.toggle('hidden');
+    seriesDropdown.classList.add('hidden');
     contrastDropdown.classList.add('hidden');
+    if (!filterDropdown.classList.contains('hidden')) setupFilterDropdown();
 });
 contrastSelectBtn.addEventListener('click', (e) => {
     e.stopPropagation();
